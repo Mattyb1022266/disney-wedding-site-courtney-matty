@@ -1,0 +1,17 @@
+name = "disney-wedding-site"
+compatibility_date = "2025-01-01"
+
+# This file is mainly for LOCAL dev (wrangler pages dev).
+# In production, set these bindings in the Cloudflare Pages dashboard.
+
+kv_namespaces = [
+  { binding = "WEDDING_KV", id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID", preview_id = "REPLACE_WITH_YOUR_KV_PREVIEW_ID" }
+]
+
+r2_buckets = [
+  { binding = "WEDDING_PHOTOS", bucket_name = "REPLACE_WITH_YOUR_R2_BUCKET_NAME", preview_bucket_name = "REPLACE_WITH_YOUR_R2_PREVIEW_BUCKET_NAME" }
+]
+
+[vars]
+# For production, set ADMIN_PASSCODE as a Pages "Environment variable" (or Secret).
+ADMIN_PASSCODE = "REPLACE_ME"

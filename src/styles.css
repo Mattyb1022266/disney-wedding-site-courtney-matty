@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root{
+  --glass: rgba(255,255,255,0.70);
+  --glass-strong: rgba(255,255,255,0.82);
+}
+
+*{ -webkit-tap-highlight-color: transparent; }
+
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+.card{
+  @apply bg-white/80 backdrop-blur-md rounded-xl3 shadow-card border border-white/60;
+}
+.pill{
+  @apply px-4 py-2 rounded-full whitespace-nowrap transition-all;
+}
+.btn-primary{
+  @apply w-full rounded-xl bg-gradient-to-r from-pastel-lilac to-pastel-blush text-slate-800 font-semibold py-3 shadow-card hover:shadow-soft transition;
+}
