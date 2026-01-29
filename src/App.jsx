@@ -1,7 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Heart, MapPin, Calendar, Camera, MessageCircle, Navigation,
-  Sparkles, Clock, Upload, Star, Wand2, Lock, Image as ImageIcon
+  Heart,
+  MapPin,
+  Calendar,
+  Camera,
+  MessageCircle,
+  Navigation,
+  Sparkles,
+  Clock,
+  Upload,
+  Star,
+  Lock,
+  Image as ImageIcon
 } from 'lucide-react';
 
 const WEDDING_DATE_ISO = '2027-04-08T17:00:00'; // Ceremony time (local browser time)
@@ -20,6 +30,11 @@ const DEFAULT_LOCATIONS = [
   { name: 'Parking', note: 'Complimentary valet available', address: 'Grand Floridian Main Entrance', coords: '28.4177,-81.5848' },
   { name: 'Magic Kingdom', note: 'Optional pre-wedding visit', address: 'Magic Kingdom Park', coords: '28.4177,-81.5812' }
 ];
+
+function cryptoRandomId() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+  return String(Date.now()) + '-' + String(Math.random()).slice(2);
+}
 
 const DEFAULT_SUGGESTIONS = [
   {
@@ -77,22 +92,17 @@ const COUPLE_PHOTOS_PLACEHOLDERS = [
   { id: 6, caption: 'Forever Begins', gradient: 'from-pastel-lilac to-pastel-sky' }
 ];
 
-function cryptoRandomId(){
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
-  return String(Date.now()) + '-' + String(Math.random()).slice(2);
-}
-
 function openMap(coords) {
   window.open(`https://maps.google.com/?q=${encodeURIComponent(coords)}`, '_blank', 'noreferrer');
 }
 
-async function apiGet(path){
-  const r = await fetch(path, { headers: { 'Accept': 'application/json' } });
+async function apiGet(path) {
+  const r = await fetch(path, { headers: { Accept: 'application/json' } });
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
 
-async function apiPost(path, body, headers = {}){
+async function apiPost(path, body, headers = {}) {
   const r = await fetch(path, {
     method: 'POST',
     headers: { ...headers, ...(body instanceof FormData ? {} : { 'Content-Type': 'application/json' }) },
@@ -166,106 +176,111 @@ export default function App() {
 
   const quickActions = [
     { label: "Today's Schedule", icon: Calendar, onClick: () => setActiveSection('schedule') },
-    { label: "Get Directions", icon: Navigation, onClick: () => openMap('28.4177,-81.5848') },
-    { label: "Message Us", icon: MessageCircle, onClick: () => window.open('sms:+1234567890', '_blank', 'noreferrer') },
+    { label: 'Get Directions', icon: Navigation, onClick: () => openMap('28.4177,-81.5848') },
+    { label: 'Message Us', icon: MessageCircle, onClick: () => window.open('sms:+1234567890', '_blank', 'noreferrer') },
     { label: "I'm Lost!", icon: MapPin, onClick: () => openMap('28.4177,-81.5848') },
-    { label: "Share Photos", icon: Camera, onClick: () => setActiveSection('upload') },
+    { label: 'Share Photos', icon: Camera, onClick: () => setActiveSection('upload') }
   ];
 
-  async function refreshPhotos(){
-    try{
+  async function refreshPhotos() {
+    try {
       const p = await apiGet('/api/photos');
       if (Array.isArray(p?.photos)) setPhotos(p.photos);
-    } catch {/* ignore */}
+    } catch {
+      // ignore
+    }
   }
 
-  async function handleUpload(e){
+  async function handleUpload(e) {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
 
     setUploadError('');
     setUploading(true);
-    try{
+    try {
       const fd = new FormData();
       for (const f of files) fd.append('photos', f);
       await apiPost('/api/photos/upload', fd);
       await refreshPhotos();
       e.target.value = '';
-    } catch (err){
+    } catch (err) {
       setUploadError(err?.message || 'Upload failed');
     } finally {
       setUploading(false);
     }
   }
 
-  async function handleAdminLogin(){
-    try{
+  async function handleAdminLogin() {
+    try {
       await apiPost('/api/suggestions', { suggestions }, { 'x-admin-passcode': adminPasscode });
       sessionStorage.setItem('wedding_admin', '1');
       setIsAdmin(true);
       setAdminPasscode('');
-    } catch (err){
+    } catch {
       alert('Passcode incorrect (or Functions not configured).');
     }
   }
 
-  async function saveSuggestions(){
-    try{
+  async function saveSuggestions() {
+    try {
       await apiPost('/api/suggestions', { suggestions }, { 'x-admin-passcode': 'SESSION' });
       alert('Saved!');
-    } catch (err){
+    } catch {
       alert('Could not save (are Functions + KV set up?)');
     }
   }
 
-  function addCategory(){
-    setSuggestions(s => [...s, { id: cryptoRandomId(), title: 'New Category', icon: '✨', items: ['New idea'] }]);
+  function addCategory() {
+    setSuggestions((s) => [...s, { id: cryptoRandomId(), title: 'New Category', icon: '✨', items: ['New idea'] }]);
   }
 
-  function removeCategory(id){
-    setSuggestions(s => s.filter(x => x.id !== id));
+  function removeCategory(id) {
+    setSuggestions((s) => s.filter((x) => x.id !== id));
   }
 
-  function updateCategory(id, patch){
-    setSuggestions(s => s.map(x => x.id === id ? { ...x, ...patch } : x));
+  function updateCategory(id, patch) {
+    setSuggestions((s) => s.map((x) => (x.id === id ? { ...x, ...patch } : x)));
   }
 
-  function updateItem(catId, idx, value){
-    setSuggestions(s => s.map(x => {
-      if (x.id !== catId) return x;
-      const items = [...x.items];
-      items[idx] = value;
-      return { ...x, items };
-    }));
+  function updateItem(catId, idx, value) {
+    setSuggestions((s) =>
+      s.map((x) => {
+        if (x.id !== catId) return x;
+        const items = [...x.items];
+        items[idx] = value;
+        return { ...x, items };
+      })
+    );
   }
 
-  function addItem(catId){
-    setSuggestions(s => s.map(x => x.id === catId ? { ...x, items: [...x.items, 'New idea'] } : x));
+  function addItem(catId) {
+    setSuggestions((s) => s.map((x) => (x.id === catId ? { ...x, items: [...x.items, 'New idea'] } : x)));
   }
 
-  function removeItem(catId, idx){
-    setSuggestions(s => s.map(x => {
-      if (x.id !== catId) return x;
-      const items = x.items.filter((_, i) => i !== idx);
-      return { ...x, items };
-    }));
+  function removeItem(catId, idx) {
+    setSuggestions((s) =>
+      s.map((x) => {
+        if (x.id !== catId) return x;
+        const items = x.items.filter((_, i) => i !== idx);
+        return { ...x, items };
+      })
+    );
   }
 
   return (
-
+    <div className="min-h-screen bg-gradient-to-br from-pastel-lilac via-pastel-blush to-pastel-sky">
       {/* Nav */}
       <nav className="sticky top-0 z-50 bg-[var(--glass-strong)] backdrop-blur-lg shadow-card border-b border-white/60">
         <div className="flex overflow-x-auto px-4 py-3 gap-2 scrollbar-hide">
-          {['home', 'schedule', 'locations', 'suggestions', 'photos', 'upload'].map(section => (
+          {['home', 'schedule', 'locations', 'suggestions', 'photos', 'upload'].map((section) => (
             <button
               key={section}
               onClick={() => setActiveSection(section)}
               className={
-                "pill " + (
-                  activeSection === section
-                    ? 'bg-white/80 shadow-card border border-white/60 scale-[1.02]'
-                    : 'bg-white/50 hover:bg-white/70 border border-white/40'
-                )
+                'pill ' +
+                (activeSection === section
+                  ? 'bg-white/80 shadow-card border border-white/60 scale-[1.02]'
+                  : 'bg-white/50 hover:bg-white/70 border border-white/40')
               }
             >
               {section.charAt(0).toUpperCase() + section.slice(1)}
@@ -284,9 +299,7 @@ export default function App() {
               </div>
             </div>
 
-            <h1 className="text-5xl md:text-7xl font-extrabold mb-4 text-slate-800">
-              We're Getting Married!
-            </h1>
+            <h1 className="text-5xl md:text-7xl font-extrabold mb-4 text-slate-800">We're Getting Married!</h1>
             <p className="text-2xl md:text-3xl text-slate-700 mb-2">at the Most Magical Place on Earth</p>
             <p className="text-lg text-slate-600 mb-10">Disney World, Florida 🏰</p>
 
@@ -306,21 +319,11 @@ export default function App() {
 
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 max-w-5xl mx-auto">
               {quickActions.map(({ label, icon: Icon, onClick }) => (
-                <button
-                  key={label}
-                  onClick={onClick}
-                  className="card p-5 hover:shadow-soft transition hover:scale-[1.02]"
-                >
+                <button key={label} onClick={onClick} className="card p-5 hover:shadow-soft transition hover:scale-[1.02]">
                   <Icon className="w-8 h-8 mx-auto mb-2 text-slate-700" />
                   <div className="font-semibold text-slate-800">{label}</div>
                 </button>
               ))}
-            </div>
-
-            <div className="max-w-5xl mx-auto mt-10 text-sm text-slate-600">
-              <span className="inline-flex items-center gap-2 bg-white/60 rounded-full px-4 py-2 border border-white/70">
-                <Wand2 className="w-4 h-4" /> Pastel mode: on ✨
-              </span>
             </div>
           </div>
         )}
@@ -328,9 +331,7 @@ export default function App() {
         {/* SCHEDULE */}
         {activeSection === 'schedule' && (
           <div className="max-w-4xl mx-auto px-6 py-12">
-            <h2 className="text-4xl font-extrabold text-center mb-10 text-slate-800">
-              Wedding Day Timeline
-            </h2>
+            <h2 className="text-4xl font-extrabold text-center mb-10 text-slate-800">Wedding Day Timeline</h2>
             <div className="space-y-6">
               {schedule.map((item, idx) => (
                 <div key={idx} className="card p-6 hover:shadow-soft transition border-l-4 border-white/70">
@@ -356,9 +357,7 @@ export default function App() {
         {/* LOCATIONS */}
         {activeSection === 'locations' && (
           <div className="max-w-4xl mx-auto px-6 py-12">
-            <h2 className="text-4xl font-extrabold text-center mb-10 text-slate-800">
-              Important Locations
-            </h2>
+            <h2 className="text-4xl font-extrabold text-center mb-10 text-slate-800">Important Locations</h2>
 
             <div className="grid md:grid-cols-2 gap-6">
               {locations.map((loc, idx) => (
@@ -367,10 +366,7 @@ export default function App() {
                   <p className="text-slate-700 mb-3">{loc.note}</p>
                   <p className="text-sm text-slate-600 mb-4">{loc.address}</p>
 
-                  <button
-                    onClick={() => openMap(loc.coords)}
-                    className="btn-primary flex items-center justify-center gap-2"
-                  >
+                  <button onClick={() => openMap(loc.coords)} className="btn-primary flex items-center justify-center gap-2">
                     <Navigation className="w-5 h-5" />
                     Open in Maps
                   </button>
@@ -384,9 +380,7 @@ export default function App() {
         {activeSection === 'suggestions' && (
           <div className="max-w-5xl mx-auto px-6 py-12">
             <div className="flex items-center justify-between gap-4 flex-wrap">
-              <h2 className="text-4xl font-extrabold text-slate-800">
-                Things to Do
-              </h2>
+              <h2 className="text-4xl font-extrabold text-slate-800">Things to Do</h2>
 
               {!isAdmin ? (
                 <div className="flex items-center gap-2">
@@ -397,17 +391,26 @@ export default function App() {
                     type="password"
                     className="px-4 py-2 rounded-full bg-white/70 border border-white/70 shadow-card outline-none"
                   />
-                  <button onClick={handleAdminLogin} className="px-4 py-2 rounded-full bg-white/80 border border-white/70 shadow-card hover:shadow-soft transition inline-flex items-center gap-2">
+                  <button
+                    onClick={handleAdminLogin}
+                    className="px-4 py-2 rounded-full bg-white/80 border border-white/70 shadow-card hover:shadow-soft transition inline-flex items-center gap-2"
+                  >
                     <Lock className="w-4 h-4" /> Edit
                   </button>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <button onClick={addCategory} className="px-4 py-2 rounded-full bg-white/80 border border-white/70 shadow-card hover:shadow-soft transition">
+                  <button
+                    onClick={addCategory}
+                    className="px-4 py-2 rounded-full bg-white/80 border border-white/70 shadow-card hover:shadow-soft transition"
+                  >
                     + Category
                   </button>
                   <button
-                    onClick={() => { sessionStorage.removeItem('wedding_admin'); setIsAdmin(false); }}
+                    onClick={() => {
+                      sessionStorage.removeItem('wedding_admin');
+                      setIsAdmin(false);
+                    }}
                     className="px-4 py-2 rounded-full bg-white/60 border border-white/70 hover:bg-white/70 transition"
                   >
                     Exit admin
@@ -416,9 +419,7 @@ export default function App() {
               )}
             </div>
 
-            <p className="text-slate-600 mt-3 mb-10">
-              Tap a card to expand. (Admin can edit right on this page.)
-            </p>
+            <p className="text-slate-600 mt-3 mb-10">Tap a card to expand.</p>
 
             <div className="grid md:grid-cols-2 gap-6">
               {suggestions.map((suggestion) => (
@@ -430,7 +431,11 @@ export default function App() {
                     <div className="flex items-center gap-4">
                       <span className="text-3xl">{suggestion.icon}</span>
                       <h3 className="text-xl font-bold text-slate-800 flex-1">{suggestion.title}</h3>
-                      <Sparkles className={`w-6 h-6 text-slate-700 transition-transform ${expandedSuggestion === suggestion.id ? 'rotate-180' : ''}`} />
+                      <Sparkles
+                        className={`w-6 h-6 text-slate-700 transition-transform ${
+                          expandedSuggestion === suggestion.id ? 'rotate-180' : ''
+                        }`}
+                      />
                     </div>
                   </button>
 
@@ -535,7 +540,11 @@ export default function App() {
                 </div>
               ) : (
                 <div className="card p-6 text-slate-700">
-                  No guest photos yet — be the first to upload in the <button className="underline font-semibold" onClick={() => setActiveSection('upload')}>Upload</button> tab.
+                  No guest photos yet — be the first to upload in the{' '}
+                  <button className="underline font-semibold" onClick={() => setActiveSection('upload')}>
+                    Upload
+                  </button>{' '}
+                  tab.
                 </div>
               )}
             </div>
@@ -545,16 +554,15 @@ export default function App() {
         {/* COUPLE PHOTOS PLACEHOLDERS */}
         {activeSection === 'photos' && (
           <div className="max-w-6xl mx-auto px-6 py-12">
-            <h2 className="text-4xl font-extrabold text-center mb-3 text-slate-800">
-              Our Love Story
-            </h2>
-            <p className="text-center text-slate-600 mb-10 text-lg">
-              Swap these placeholders with your real photos whenever you’re ready.
-            </p>
+            <h2 className="text-4xl font-extrabold text-center mb-3 text-slate-800">Our Love Story</h2>
+            <p className="text-center text-slate-600 mb-10 text-lg">Swap these placeholders with your real photos whenever you’re ready.</p>
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
               {COUPLE_PHOTOS_PLACEHOLDERS.map((photo) => (
-                <div key={photo.id} className="group relative aspect-square rounded-xl3 overflow-hidden shadow-card border border-white/70 hover:shadow-soft transition hover:scale-[1.01]">
+                <div
+                  key={photo.id}
+                  className="group relative aspect-square rounded-xl3 overflow-hidden shadow-card border border-white/70 hover:shadow-soft transition hover:scale-[1.01]"
+                >
                   <div className={`w-full h-full bg-gradient-to-br ${photo.gradient} flex items-center justify-center`}>
                     <Camera className="w-16 h-16 text-slate-600/40" />
                   </div>
@@ -572,33 +580,19 @@ export default function App() {
         {/* UPLOAD */}
         {activeSection === 'upload' && (
           <div className="max-w-5xl mx-auto px-6 py-12">
-            <h2 className="text-4xl font-extrabold text-center mb-3 text-slate-800">
-              Share Your Photos
-            </h2>
-            <p className="text-center text-slate-600 mb-10 text-lg">
-              Guests can upload photos here — everyone will be able to see them.
-            </p>
+            <h2 className="text-4xl font-extrabold text-center mb-3 text-slate-800">Share Your Photos</h2>
+            <p className="text-center text-slate-600 mb-10 text-lg">Guests can upload photos here — everyone will be able to see them.</p>
 
             <div className="card p-8 mb-8">
               <label className="flex flex-col items-center justify-center h-64 border-4 border-dashed border-white/70 rounded-xl3 cursor-pointer hover:bg-white/40 transition">
                 <Upload className="w-14 h-14 text-slate-700 mb-3" />
-                <span className="text-xl font-semibold text-slate-800 mb-1">
-                  {uploading ? 'Uploading…' : 'Click to Upload Photos'}
-                </span>
+                <span className="text-xl font-semibold text-slate-800 mb-1">{uploading ? 'Uploading…' : 'Click to Upload Photos'}</span>
                 <span className="text-sm text-slate-600">or drag and drop</span>
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleUpload}
-                  disabled={uploading}
-                />
+                <input type="file" multiple accept="image/*" className="hidden" onChange={handleUpload} disabled={uploading} />
               </label>
+
               {uploadError && (
-                <div className="mt-4 text-sm text-rose-700 bg-white/70 border border-white/70 rounded-xl p-3">
-                  {uploadError}
-                </div>
+                <div className="mt-4 text-sm text-rose-700 bg-white/70 border border-white/70 rounded-xl p-3">{uploadError}</div>
               )}
 
               <div className="mt-4 text-xs text-slate-600">
@@ -624,9 +618,7 @@ export default function App() {
                 ))}
               </div>
             ) : (
-              <div className="card p-6 text-slate-700">
-                No uploads yet — once a guest uploads, they’ll show up here.
-              </div>
+              <div className="card p-6 text-slate-700">No uploads yet — once a guest uploads, they’ll show up here.</div>
             )}
           </div>
         )}
