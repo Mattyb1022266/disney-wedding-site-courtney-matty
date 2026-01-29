@@ -252,14 +252,6 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pastel-lavender via-pastel-blush to-pastel-sky">
-      {/* Soft sparkles */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 text-6xl opacity-40 animate-floaty">✨</div>
-        <div className="absolute top-44 right-12 text-5xl opacity-40 animate-floaty" style={{ animationDelay: '0.9s' }}>💫</div>
-        <div className="absolute bottom-36 left-12 text-5xl opacity-40 animate-floaty" style={{ animationDelay: '1.4s' }}>⭐</div>
-        <div className="absolute bottom-20 right-10 text-6xl opacity-40 animate-floaty" style={{ animationDelay: '2s' }}>✨</div>
-      </div>
 
       {/* Nav */}
       <nav className="sticky top-0 z-50 bg-[var(--glass-strong)] backdrop-blur-lg shadow-card border-b border-white/60">
