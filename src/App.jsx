@@ -71,15 +71,16 @@ const DEFAULT_SUGGESTIONS = [
     ]
   },
   {
-    id: cryptoRandomId(),
-    title: 'Rain Plan Ideas',
-    icon: '🌧️',
-    items: [
-      'Indoor photos at resort lobby',
-      'Visit Disney Springs shopping',
-      'Enjoy resort amenities',
-  }
-];
+    {
+  id: cryptoRandomId(),
+  title: 'Rain Plan Ideas',
+  icon: '🌧️',
+  items: [
+    'Indoor photos at resort lobby',
+    'Visit Disney Springs shopping',
+    'Enjoy resort amenities'
+  ]
+}
 
 const COUPLE_PHOTOS_PLACEHOLDERS = [
   { id: 1, caption: 'Our First Date', gradient: 'from-pastel-blush to-pastel-lilac' },
