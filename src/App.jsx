@@ -78,7 +78,6 @@ const DEFAULT_SUGGESTIONS = [
       'Indoor photos at resort lobby',
       'Visit Disney Springs shopping',
       'Enjoy resort amenities',
-      'Umbrellas provided at ceremony'
     ]
   }
 ];
